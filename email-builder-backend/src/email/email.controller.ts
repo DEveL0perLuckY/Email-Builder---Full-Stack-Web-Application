@@ -1,10 +1,7 @@
 import { Controller, Get, Post, Body, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { EmailService } from './email.service';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { v4 as uuidv4 } from 'uuid';
-import * as path from 'path';
-
+import * as multer from 'multer';
 
 @Controller('email')
 export class EmailController {
@@ -21,23 +18,12 @@ export class EmailController {
   }
 
   @Post('/uploadImage')
-  @UseInterceptors(
-    FileInterceptor('image', {
-      storage: diskStorage({
-        destination: './uploads',
-        filename: (req, file, cb) => {
-          const filename: string = uuidv4();
-          const extension: string = path.extname(file.originalname);
-          cb(null, `${filename}${extension}`);
-        },
-      }),
-    }),
-  )
-  uploadImage(@UploadedFile() file: Express.Multer.File) {
-    
+  @UseInterceptors(FileInterceptor('image', { storage: multer.memoryStorage() }))
+  async uploadImage(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
       throw new Error('File upload failed');
     }
-    return { imageUrl: `http://localhost:3000/uploads/${file.filename}` };
+    const imageUrl = await this.emailService.uploadImageToS3(file);
+    return { imageUrl };
   }
 }
