@@ -32,7 +32,12 @@ const EmailEditor = () => {
       try {
         const { data } = await axios.post(
           "http://localhost:3000/email/uploadImage",
-          formData
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
         );
         setEmailConfig({ ...emailConfig, imageUrl: data.imageUrl });
       } catch (error) {

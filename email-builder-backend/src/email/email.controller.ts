@@ -34,6 +34,7 @@ export class EmailController {
     }),
   )
   uploadImage(@UploadedFile() file: Express.Multer.File) {
+    
     if (!file) {
       throw new Error('File upload failed');
     }
