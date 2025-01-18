@@ -7,11 +7,6 @@ import * as multer from 'multer';
 export class EmailController {
   constructor(private readonly emailService: EmailService) {}
 
-  @Get('/getEmailLayout')
-  async getLayout(): Promise<string> {
-    return this.emailService.getEmailLayout();
-  }
-
   @Post('/uploadEmailConfig')
   async saveEmail(@Body() data: any) {
     return this.emailService.createEmailTemplate(data);

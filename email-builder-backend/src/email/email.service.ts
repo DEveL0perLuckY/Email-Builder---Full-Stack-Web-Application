@@ -26,10 +26,6 @@ export class EmailService {
     return newTemplate.save();
   }
 
-  async getEmailLayout(): Promise<string> {
-    return `<html><body><h1>{{title}}</h1><p>{{content}}</p><img src="{{imageUrl}}" /><footer>{{footer}}</footer></body></html>`;
-  }
-
   async uploadImageToS3(file: Express.Multer.File): Promise<string> {
     const bucketName = process.env.AWS_BUCKET_NAME;
 

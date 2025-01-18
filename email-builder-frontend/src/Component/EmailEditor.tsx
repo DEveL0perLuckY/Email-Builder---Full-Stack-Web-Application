@@ -3,6 +3,7 @@ import axios from "axios";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import placeholderImg from "../assets/placeholder.jpg";
+const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
 const EmailEditor = () => {
   const [emailConfig, setEmailConfig] = useState({
@@ -10,13 +11,8 @@ const EmailEditor = () => {
     content: "",
     footer: "",
     imageUrl: "",
+    imageFile: null,
   });
-
-  useEffect(() => {
-    axios.get("http://localhost:3000/email/getEmailLayout").then((res) => {
-      console.log(res.data);
-    });
-  }, []);
 
   const handleChange = (field, value) => {
     setEmailConfig({ ...emailConfig, [field]: value });
@@ -26,12 +22,37 @@ const EmailEditor = () => {
     const file = event.target.files?.[0];
     if (file) {
       const previewUrl = URL.createObjectURL(file);
-      setEmailConfig({ ...emailConfig, imageUrl: previewUrl });
-      const formData = new FormData();
-      formData.append("image", file);
-      try {
-        const { data } = await axios.post(
-          "http://localhost:3000/email/uploadImage",
+      setEmailConfig({ ...emailConfig, imageUrl: previewUrl, imageFile: file });
+    }
+  };
+
+  const handleSubmit = async () => {
+
+    if (!emailConfig.title.trim()) {
+      alert("❌ Title is required!");
+      return;
+    }
+
+    if (!emailConfig.content.trim()) {
+      alert("❌ Email content is required!");
+      return;
+    }
+
+    if (!emailConfig.footer.trim()) {
+      alert("❌ Footer text is required!");
+      return;
+    }
+
+    try {
+      let uploadedImageUrl = emailConfig.imageUrl;
+
+      // If an image file is provided, upload it
+      if (emailConfig.imageFile) {
+        const formData = new FormData();
+        formData.append("image", emailConfig.imageFile);
+
+        const { data: imageData } = await axios.post(
+          `${backendUrl}/email/uploadImage`,
           formData,
           {
             headers: {
@@ -39,21 +60,30 @@ const EmailEditor = () => {
             },
           }
         );
-        setEmailConfig({ ...emailConfig, imageUrl: data.imageUrl });
-      } catch (error) {
-        console.error("Image upload failed:", error);
+
+        uploadedImageUrl = imageData.imageUrl; // Update the image URL from the backend
       }
+
+      // Prepare the final email configuration
+      const finalConfig = {
+        title: emailConfig.title,
+        content: emailConfig.content,
+        footer: emailConfig.footer || "", // Optional footer
+        imageUrl: uploadedImageUrl || "", // Optional imageUrl
+      };
+
+      // Send the final configuration to the backend
+      await axios.post(
+        `${backendUrl}/email/uploadEmailConfig`,
+        finalConfig
+      );
+
+      alert("✅ Email template saved successfully!");
+    } catch (error) {
+      console.error("Error saving email template:", error);
+      alert("❌ Failed to save email template.");
     }
   };
-
-  const handleSubmit = async () => {
-    await axios.post(
-      "http://localhost:3000/email/uploadEmailConfig",
-      emailConfig
-    );
-    alert("✅ Email template saved successfully!");
-  };
-
   return (
     <div className="min-h-screen bg-gray-100 p-4 sm:p-8 flex flex-col items-center">
       <div className="bg-white shadow-md rounded-lg p-6 max-w-5xl w-full">
