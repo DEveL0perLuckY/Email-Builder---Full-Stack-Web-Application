@@ -139,21 +139,21 @@ export class EmailService {
               </a>
             </p>
           </div>
-          <div class="signature">
-            © ${new Date().getFullYear()} Lucky Mourya. All Rights Reserved.
-          </div>
+          <div class="signature">© 2025 Lucky Mourya. All Rights Reserved.</div>
         </div>
       </body>
       </html>
     `;
 
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
+    
     const page = await browser.newPage();
 
-    // Set HTML content
+
     await page.setContent(htmlTemplate, { waitUntil: 'domcontentloaded' });
 
-    // Wait for the image to load
     if (data.imageUrl) {
       try {
         await page.waitForSelector('#dynamic-image', {
@@ -176,7 +176,6 @@ export class EmailService {
       }
     }
 
-    // Generate the PDF
     const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true });
     await browser.close();
 
