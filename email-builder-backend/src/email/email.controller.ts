@@ -2,14 +2,17 @@ import { Controller, Get, Post, Body, UploadedFile, UseInterceptors } from '@nes
 import { EmailService } from './email.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import * as multer from 'multer';
-
 @Controller('email')
 export class EmailController {
   constructor(private readonly emailService: EmailService) {}
 
   @Post('/uploadEmailConfig')
   async saveEmail(@Body() data: any) {
-    return this.emailService.createEmailTemplate(data);
+    const newTemplate = await this.emailService.createEmailTemplate(data);
+    console.log("data : ",newTemplate)
+    const pdfBuffer = await this.emailService.generateEmailPdf(newTemplate);
+    const pdfUrl = await this.emailService.uploadEmailTemplateToS3(pdfBuffer);
+    return { pdfUrl };
   }
 
   @Post('/uploadImage')

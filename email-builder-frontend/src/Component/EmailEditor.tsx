@@ -27,7 +27,6 @@ const EmailEditor = () => {
   };
 
   const handleSubmit = async () => {
-
     if (!emailConfig.title.trim()) {
       alert("❌ Title is required!");
       return;
@@ -64,19 +63,21 @@ const EmailEditor = () => {
         uploadedImageUrl = imageData.imageUrl; // Update the image URL from the backend
       }
 
-      // Prepare the final email configuration
       const finalConfig = {
         title: emailConfig.title,
         content: emailConfig.content,
-        footer: emailConfig.footer || "", // Optional footer
-        imageUrl: uploadedImageUrl || "", // Optional imageUrl
+        footer: emailConfig.footer || "",
+        imageUrl: uploadedImageUrl || "",
       };
 
-      // Send the final configuration to the backend
-      await axios.post(
+      const response = await axios.post(
         `${backendUrl}/email/uploadEmailConfig`,
         finalConfig
       );
+      const link = document.createElement("a");
+      link.href = response.data.pdfUrl;
+      link.target = "_blank";
+      link.click();
 
       alert("✅ Email template saved successfully!");
     } catch (error) {
@@ -84,6 +85,7 @@ const EmailEditor = () => {
       alert("❌ Failed to save email template.");
     }
   };
+
   return (
     <div className="min-h-screen bg-gray-100 p-4 sm:p-8 flex flex-col items-center">
       <div className="bg-white shadow-md rounded-lg p-6 max-w-5xl w-full">
@@ -119,11 +121,10 @@ const EmailEditor = () => {
               className="mb-5 bg-white"
               style={{ height: "300px" }} // Increased height
             />
-
-            <label className="block text-gray-700 font-medium mt-4 mb-2">
-              🖼️ Upload Image:
-            </label>
-            <div className="relative">
+            <div className="relative" style={{ marginTop: 100 }}>
+              <label className="block text-gray-700 font-medium mt-4 mb-2">
+                🖼️ Upload Image:
+              </label>
               <input
                 type="file"
                 onChange={handleUpload}
@@ -159,13 +160,16 @@ const EmailEditor = () => {
                   className="w-full max-h-64 object-contain rounded-md shadow-md border"
                 />
               </div>
+
               <div
                 className="text-left border p-3 rounded-md bg-white"
                 dangerouslySetInnerHTML={{
-                  __html:
-                    emailConfig.content || "Start typing your email content...",
+                  __html:(
+                    emailConfig.content || "Start typing your email content..."
+                  ),
                 }}
               ></div>
+
               <p className="mt-4 text-gray-500">
                 {emailConfig.footer || "Your email footer text..."}
               </p>
