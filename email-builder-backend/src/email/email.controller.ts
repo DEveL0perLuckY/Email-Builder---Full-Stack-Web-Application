@@ -9,7 +9,7 @@ export class EmailController {
   @Post('/uploadEmailConfig')
   async saveEmail(@Body() data: any) {
     const newTemplate = await this.emailService.createEmailTemplate(data);
-    console.log("data : ",newTemplate)
+
     const pdfBuffer = await this.emailService.generateEmailPdf(newTemplate);
     const pdfUrl = await this.emailService.uploadEmailTemplateToS3(pdfBuffer);
     return { pdfUrl };

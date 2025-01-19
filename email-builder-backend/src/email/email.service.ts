@@ -24,8 +24,6 @@ export class EmailService {
   }
 
   async generateEmailPdf(data: any): Promise<any> {
-    console.log(data)
-    console.log(data.imageUrl)
     const htmlTemplate = `
       <!DOCTYPE html>
       <html lang="en">
@@ -33,75 +31,93 @@ export class EmailService {
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>${data.title}</title>
-        <style>
-          body {
-            font-family: 'Arial', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f9;
-            color: #333;
-          }
-          .container {
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 20px;
-            background-color: #ffffff;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-          }
-          .header {
-            text-align: center;
-            font-size: 28px;
-            font-weight: bold;
-            color: #2b6cb0;
-            margin-bottom: 20px;
-          }
-          .content {
-            font-size: 16px;
-            line-height: 1.6;
-            margin-bottom: 20px;
-            word-wrap: break-word;
-          }
-          .content a {
-            color: #3182ce;
-            text-decoration: none;
-          }
-          .content a:hover {
-            text-decoration: underline;
-          }
-          .footer {
-            margin-top: 30px;
-            font-size: 14px;
-            color: #666;
-            text-align: center;
-          }
-          .footer a {
-            color: #3182ce;
-            text-decoration: none;
-          }
-          img {
-            display: block;
-            max-width: 100%;
-            margin: 20px auto;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-          }
-          .signature {
-            margin-top: 40px;
-            font-size: 12px;
-            color: #999;
-            text-align: center;
-          }
-          .subfooter { margin-top: 30px; font-size: 14px; text-align: center; color: gray; }
-          img {
-          display: block;
-          width: auto;
-          height: auto; /* Maintain aspect ratio */
-          margin: 20px auto;
-          border-radius: 8px;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-        }
-        </style>
+<style>
+  body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f9f9fc;
+    color: #333;
+  }
+  .container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+  .header {
+    text-align: center;
+    font-size: 28px;
+    font-weight: bold;
+    background: linear-gradient(to right, #f5f5f5, #eaeaea);
+    color: #333;
+    padding: 15px;
+    border-radius: 10px 10px 0 0;
+    margin-bottom: 20px;
+  }
+  .content {
+    font-size: 16px;
+    line-height: 1.6;
+    margin: 0 auto 20px; /* Center align horizontally and add spacing at the bottom */
+    text-align: center; /* Center text inside the content */
+    word-wrap: break-word;
+    max-width: 600px; /* Limit width for better readability */
+  }
+  .content a {
+    color: #2b6cb0;
+    text-decoration: none;
+    font-weight: bold;
+  }
+  .content a:hover {
+    text-decoration: underline;
+  }
+  .footer {
+    margin-top: 30px;
+    font-size: 14px;
+    color: #666;
+    text-align: center;
+    padding: 15px;
+    background: #f5f5f5;
+    border-radius: 0 0 10px 10px;
+  }
+  .footer a {
+    color: #2b6cb0;
+    text-decoration: none;
+  }
+  img {
+    display: block;
+    max-width: 100%;
+    margin: 20px auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+  .signature {
+    margin-top: 40px;
+    font-size: 12px;
+    color: #999;
+    text-align: center;
+  }
+  .subfooter {
+    margin-top: 30px;
+    font-size: 14px;
+    text-align: center;
+    color: gray;
+  }
+  .content-section:nth-child(odd) {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 10px;
+  }
+  .content-section:nth-child(even) {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+  }
+</style>
+
+
       </head>
       <body>
         <div class="container">
@@ -131,20 +147,24 @@ export class EmailService {
       </html>
     `;
 
-
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
-  
+
     // Set HTML content
     await page.setContent(htmlTemplate, { waitUntil: 'domcontentloaded' });
-  
+
     // Wait for the image to load
     if (data.imageUrl) {
       try {
-        await page.waitForSelector('#dynamic-image', { visible: true, timeout: 10000 });
+        await page.waitForSelector('#dynamic-image', {
+          visible: true,
+          timeout: 10000,
+        });
         await page.evaluate(() => {
           return new Promise((resolve, reject) => {
-            const img = document.getElementById('dynamic-image') as HTMLImageElement;
+            const img = document.getElementById(
+              'dynamic-image',
+            ) as HTMLImageElement;
             if (!img) return resolve(true);
             if (img.complete) return resolve(true);
             img.onload = () => resolve(true);
@@ -155,11 +175,11 @@ export class EmailService {
         console.error('Error waiting for image to load:', error);
       }
     }
-  
+
     // Generate the PDF
     const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true });
     await browser.close();
-  
+
     return pdfBuffer;
   }
 
