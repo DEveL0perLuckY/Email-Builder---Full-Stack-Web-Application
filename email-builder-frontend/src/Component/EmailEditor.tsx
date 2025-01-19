@@ -6,6 +6,7 @@ import placeholderImg from "../assets/placeholder.jpg";
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
 const EmailEditor = () => {
+  const [loading, setLoading] = useState(false);
   const [emailConfig, setEmailConfig] = useState({
     title: "",
     content: "",
@@ -41,7 +42,7 @@ const EmailEditor = () => {
       alert("❌ Footer text is required!");
       return;
     }
-
+    setLoading(true);
     try {
       let uploadedImageUrl = emailConfig.imageUrl;
 
@@ -83,6 +84,8 @@ const EmailEditor = () => {
     } catch (error) {
       console.error("Error saving email template:", error);
       alert("❌ Failed to save email template.");
+    } finally {
+      setLoading(false); // End loading
     }
   };
 
@@ -96,8 +99,9 @@ const EmailEditor = () => {
           <button
             onClick={handleSubmit}
             className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-md"
+            disabled={loading}
           >
-            💾 Save Template
+            {loading ? "⏳ Creating PDF..." : "💾 Save Template"}
           </button>
         </div>
 
@@ -164,9 +168,8 @@ const EmailEditor = () => {
               <div
                 className="text-left border p-3 rounded-md bg-white"
                 dangerouslySetInnerHTML={{
-                  __html:(
-                    emailConfig.content || "Start typing your email content..."
-                  ),
+                  __html:
+                    emailConfig.content || "Start typing your email content...",
                 }}
               ></div>
 

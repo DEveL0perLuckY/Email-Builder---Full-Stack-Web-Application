@@ -93,16 +93,25 @@ export class EmailService {
             text-align: center;
           }
           .subfooter { margin-top: 30px; font-size: 14px; text-align: center; color: gray; }
+          img {
+          display: block;
+          width: auto;
+          height: auto; /* Maintain aspect ratio */
+          margin: 20px auto;
+          border-radius: 8px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
         </style>
       </head>
       <body>
         <div class="container">
           <div class="header">${data.title}</div>
+          ${data.imageUrl ? `<img src="${data.imageUrl}" id="dynamic-image" alt="Attached Image" />` : ''}
           <div class="content">${data.content}</div>
-          ${data.imageUrl ? `<img src="${data.imageUrl}" alt="Attached Image" />` : ''}
           <div class="subfooter">
                   ${data.footer || 'Your email footer text...'}
           </div>
+
           <div class="footer">
             <p>Created by <strong>Lucky Mourya</strong></p>
             <p>
@@ -122,12 +131,35 @@ export class EmailService {
       </html>
     `;
 
+
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
+  
+    // Set HTML content
     await page.setContent(htmlTemplate, { waitUntil: 'domcontentloaded' });
+  
+    // Wait for the image to load
+    if (data.imageUrl) {
+      try {
+        await page.waitForSelector('#dynamic-image', { visible: true, timeout: 10000 });
+        await page.evaluate(() => {
+          return new Promise((resolve, reject) => {
+            const img = document.getElementById('dynamic-image') as HTMLImageElement;
+            if (!img) return resolve(true);
+            if (img.complete) return resolve(true);
+            img.onload = () => resolve(true);
+            img.onerror = () => reject(new Error('Image failed to load'));
+          });
+        });
+      } catch (error) {
+        console.error('Error waiting for image to load:', error);
+      }
+    }
+  
+    // Generate the PDF
     const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true });
     await browser.close();
-
+  
     return pdfBuffer;
   }
 
